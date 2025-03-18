@@ -158,6 +158,8 @@ async def on_message(message):
             if case_match:
                 officer_name = case_match.group(1).strip()
                 case_details = case_match.group(2).strip()
+                
+                case_details = re.split(r"\s*ใส่\s*", case_details)[0]
                 logging.info(f"✅ Extracted case - Officer: {officer_name}, Case: {case_details}")
 
                 if "RED" in case_details and log_red_case:
