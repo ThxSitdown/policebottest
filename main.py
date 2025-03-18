@@ -200,7 +200,7 @@ def run_discord_bot():
         logging.error(f"❌ Discord bot encountered an error: {e}")
 
 # ฟังก์ชัน Keep-Alive
-KEEP_ALIVE_URL = "https://discord-log-to-sheets.onrender.com/health"
+KEEP_ALIVE_URL = "https://policebottest.onrender.com/health"
 
 def keep_alive():
     while True:
