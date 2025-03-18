@@ -173,17 +173,17 @@ async def on_message(message):
                 logging.warning("⚠️ Case format not recognized")
         
         # ✅ Take2
-        elif message.channel.id == TAKE_CHANNEL_ID:
-            logging.info(f"📌 รับข้อความจาก Take2 Channel: {repr(message.content)}")
+    elif message.channel.id == TAKE_CHANNEL_ID:
+        logging.info(f"📌 รับข้อความจาก Take2 Channel: {repr(message.content)}")
 
-            take_sheet = police_case_sheet.worksheet("Take2")  # ดึงชีต Take2
+        take_sheet = police_case_sheet.worksheet("Take2")  # ดึงชีต Take2
 
-            # บันทึกข้อมูลลง Google Sheets
-            if take_sheet:
-                save_to_sheet(take_sheet, [message.author.name, message.content])
-                logging.info(f"✅ บันทึกลง Take2: {message.author.name} - {message.content}")
-            else:
-                logging.error("❌ ไม่สามารถเข้าถึงชีต Take2")
+        # บันทึกข้อมูลลง Google Sheets
+        if take_sheet:
+            save_to_sheet(take_sheet, [message.author.name, message.content])
+            logging.info(f"✅ บันทึกลง Take2: {message.author.name} - {message.content}")
+        else:
+            logging.error("❌ ไม่สามารถเข้าถึงชีต Take2")
 
     await bot.process_commands(message)
 
