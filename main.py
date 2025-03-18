@@ -165,7 +165,7 @@ async def on_message(message):
                     save_to_sheet(log_red_case, [officer_name, case_details])
                 elif log_black_case:
                     logging.info("📁 Black case detected, saving to logBlackcase")
-                    save_to_sheet(log_black_case, [of   ficer_name, case_details])
+                    save_to_sheet(log_black_case, [officer_name, case_details])
             else:
                 logging.warning("⚠️ Case format not recognized")
 
