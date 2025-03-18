@@ -54,7 +54,7 @@ async def on_ready():
             logging.error(f"❌ ไม่สามารถเชื่อมต่อ Google Sheets: {e}")
 
 # ✅ รับข้อมูลเฉพาะจากห้องที่มี ID = 1341317415367082006 เท่านั้น
-TARGET_CHANNEL_ID = 1341317415367082006  
+TARGET_CHANNEL_ID = 1330215305066188864  
 
 # ฟังก์ชันสำหรับแปลงเวลาเป็นรูปแบบ DD/MM/YYYY HH:MM:SS
 def format_datetime(raw_time):
@@ -140,6 +140,49 @@ if GOOGLE_CREDENTIALS:
         logging.error(f"❌ Error loading Google Sheets credentials: {e}")
 else:
     logging.warning("⚠️ GOOGLE_CREDENTIALS not found.")
+
+# ✅✅✅✅✅ PoliceCase ✅✅✅✅✅
+NEW_TARGET_CHANNEL_ID = 1350960006073159802 
+
+# ✅ เชื่อมต่อ Google Sheet "PoliceCase"
+try:
+    police_case_sheet = client.open("PoliceCase")
+    log_red_case = police_case_sheet.worksheet("logREDcase")
+    log_black_case = police_case_sheet.worksheet("logBlackcase")
+    logging.info("✅ Google Sheets (PoliceCase) เชื่อมต่อสำเร็จ")
+except Exception as e:
+    logging.error(f"❌ ไม่สามารถเชื่อมต่อ Google Sheets (PoliceCase): {e}")
+
+@bot.event
+async def on_message(message):
+    # ✅ ดึงข้อมูลจากห้องใหม่ (ตรวจสอบ ID ห้องที่กำหนด)
+    if message.channel.id == NEW_TARGET_CHANNEL_ID:
+        if message.author.bot:  # ✅ ตรวจสอบว่าเป็นข้อความจากบอทหรือ Webhook
+            content = message.content.strip()
+
+            # ✅ ตรวจสอบว่าเป็นข้อความเกี่ยวกับ "ได้ทำคดี"
+            case_match = re.search(r"ได้ทำคดี\s(.+)", content)
+            if case_match:
+                case_details = case_match.group(1).strip()
+
+                # ✅ ตรวจสอบว่ามีคำว่า "RED" หรือไม่
+                if "RED" in case_details:
+                    sheet_to_use = log_red_case
+                else:
+                    sheet_to_use = log_black_case
+
+                # ✅ ค้นหาบรรทัดสุดท้ายของ Google Sheet ที่เลือก
+                last_row = len(sheet_to_use.col_values(1)) + 1
+
+                # ✅ บันทึกข้อมูลลง Google Sheets
+                try:
+                    sheet_to_use.update(f"A{last_row}:B{last_row}", [[message.author.name, case_details]])
+                    logging.info(f"✅ บันทึกข้อมูลลง Google Sheet สำเร็จที่ {sheet_to_use.title}")
+                except Exception as e:
+                    logging.error(f"❌ ไม่สามารถบันทึกข้อมูล Google Sheets: {e}")
+
+    await bot.process_commands(message)
+
 
 # ฟังก์ชันสำหรับรัน Discord Bot
 def run_discord_bot():
