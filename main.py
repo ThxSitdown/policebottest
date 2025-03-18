@@ -138,16 +138,23 @@ async def on_message(message):
 
         # ✅ ตรวจสอบการบันทึกคดี (PoliceCase)
         elif message.channel.id == CASE_CHANNEL_ID:
+            logging.info(f"📌 Received case message: {content}")
+
             case_match = re.search(r"Name:\s*(.+?)\n.*?ได้ทำคดี\s*(.+)", content, re.DOTALL)
-            
             if case_match:
                 officer_name = case_match.group(1).strip()
                 case_details = case_match.group(2).strip()
-                
+                logging.info(f"👮 Officer: {officer_name}, 📄 Case Details: {case_details}")
+
                 if "RED" in case_details and log_red_case:
+                    logging.info("🚨 RED case detected, saving to logREDcase")
                     save_to_sheet(log_red_case, [officer_name, case_details])
                 elif log_black_case:
+                    logging.info("📁 Black case detected, saving to logBlackcase")
                     save_to_sheet(log_black_case, [officer_name, case_details])
+            else:
+                logging.warning("⚠️ Case format not recognized")
+
 
 
     await bot.process_commands(message)
