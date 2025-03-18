@@ -143,17 +143,17 @@ async def on_message(message):
 
             case_match = None  # เก็บผลลัพธ์ของการตรวจสอบคดี
 
-            # ✅ ตรวจสอบข้อความปกติก่อน
-            case_match = re.search(r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", content, re.DOTALL | re.IGNORECASE)
-
-            # ✅ ถ้าไม่พบข้อมูลในข้อความ ให้ลองดึงข้อมูลจาก Embed
-            if not case_match and message.embeds:
+            # ✅ ลองดึงข้อมูลจาก Embed (ทุกฟิลด์)
+            if message.embeds:
                 embed = message.embeds[0]  # ดึงเฉพาะ Embed แรก
-                embed_text = f"{embed.title}\n{embed.description}"
+                embed_data = f"📌 Embed Data - Title: {embed.title}, Desc: {embed.description}, Fields: {[{'name': f.name, 'value': f.value} for f in embed.fields]}"
+                logging.info(embed_data)
 
-                logging.info(f"📌 Extracted from embed: {repr(embed_text)}")
+                # รวมข้อมูลจากทุกฟิลด์เป็นข้อความเดียว
+                embed_text = f"{embed.title}\n{embed.description}\n" + "\n".join([f"{f.name}: {f.value}" for f in embed.fields])
 
-                case_match = re.search(r"\*\*Name:\*\*\s*([^\n]+).*?ทำคดี\s*([^*]+)", embed.description, re.DOTALL | re.IGNORECASE)
+                # ✅ ลองค้นหา "ได้ทำคดี" จาก Embed
+                case_match = re.search(r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", embed_text, re.DOTALL | re.IGNORECASE)
 
             # ✅ บันทึกข้อมูลหากตรงรูปแบบ
             if case_match:
@@ -171,6 +171,7 @@ async def on_message(message):
                     save_to_sheet(log_black_case, [officer_name, case_details])
             else:
                 logging.warning("⚠️ Case format not recognized")
+
         
         # ✅ Take2
     elif message.channel.id == TAKE_CHANNEL_ID:
