@@ -138,14 +138,17 @@ async def on_message(message):
 
         # ✅ ตรวจสอบการบันทึกคดี (PoliceCase)
         elif message.channel.id == CASE_CHANNEL_ID:
-            case_match = re.search(r"ได้ทำคดี\s(.+)", content)
+            case_match = re.search(r"Name:\s*(.+?)\n.*?ได้ทำคดี\s*(.+)", content, re.DOTALL)
+            
             if case_match:
-                case_details = case_match.group(1).strip()
-
+                officer_name = case_match.group(1).strip()
+                case_details = case_match.group(2).strip()
+                
                 if "RED" in case_details and log_red_case:
-                    save_to_sheet(log_red_case, [message.author.name, case_details])
+                    save_to_sheet(log_red_case, [officer_name, case_details])
                 elif log_black_case:
-                    save_to_sheet(log_black_case, [message.author.name, case_details])
+                    save_to_sheet(log_black_case, [officer_name, case_details])
+
 
     await bot.process_commands(message)
 
