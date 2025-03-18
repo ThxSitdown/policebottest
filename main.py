@@ -153,7 +153,7 @@ async def on_message(message):
 
                 logging.info(f"📌 Extracted from embed: {repr(embed_text)}")
 
-                case_match = re.search(r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", embed_text, re.DOTALL | re.IGNORECASE)
+                case_match = re.search(r"\*\*Name:\*\*\s*([^\n]+).*?ทำคดี\s*([^*]+)", embed.description, re.DOTALL | re.IGNORECASE)
 
             # ✅ บันทึกข้อมูลหากตรงรูปแบบ
             if case_match:
