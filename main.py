@@ -57,8 +57,8 @@ if GOOGLE_CREDENTIALS:
         client = gspread.authorize(creds)
         
         # เชื่อมต่อชีตหลัก "PoliceDutytest"
-        sheet = client.open("PoliceDutytest").worksheet("Sheet1")
-        logging.info("✅ Google Sheets (PoliceDutytest) เชื่อมต่อสำเร็จ")
+        sheet = client.open("PoliceDuty").worksheet("Sheet1")
+        logging.info("✅ Google Sheets (PoliceDuty) เชื่อมต่อสำเร็จ")
         
         # เชื่อมต่อชีต "PoliceCase"
         police_case_sheet = client.open("PoliceCase")
@@ -104,7 +104,7 @@ async def on_message(message):
     if message.author.bot:
         content = message.content.strip()
 
-        # ✅ ตรวจสอบการบันทึกเวลางาน (PoliceDutytest)
+        # ✅ ตรวจสอบการบันทึกเวลางาน (PoliceDuty)
         if message.channel.id == DUTY_CHANNEL_ID and message.author.name == "Captain Hook":
             name, steam_id, check_in_time, check_out_time = None, None, None, None
 
