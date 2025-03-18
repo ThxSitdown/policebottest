@@ -74,6 +74,7 @@ else:
 # ✅ ตั้งค่าห้องที่ใช้รับข้อมูล
 DUTY_CHANNEL_ID = 1330215305066188864  
 CASE_CHANNEL_ID = 1350960006073159802 
+TAKE_CHANNEL_ID = 1351618192094662717
 
 # ✅ ฟังก์ชันแปลงเวลาเป็นรูปแบบ DD/MM/YYYY HH:MM:SS
 def format_datetime(raw_time):
@@ -158,7 +159,7 @@ async def on_message(message):
             if case_match:
                 officer_name = case_match.group(1).strip()
                 case_details = case_match.group(2).strip()
-                
+
                 case_details = re.split(r"\s*ใส่\s*", case_details)[0]
                 logging.info(f"✅ Extracted case - Officer: {officer_name}, Case: {case_details}")
 
@@ -170,7 +171,18 @@ async def on_message(message):
                     save_to_sheet(log_black_case, [officer_name, case_details])
             else:
                 logging.warning("⚠️ Case format not recognized")
+        
+        # ✅ Take2
+        elif message.channel.id == TAKE_CHANNEL_ID:
+            logging.info(f"📌 รับข้อความจาก Take Channel: {repr(message.content)}")
 
+            take_sheet = police_case_sheet.worksheet("Take2")  # ดึงชีต Take2
+
+            # บันทึกข้อมูลลง Google Sheets
+            if take_sheet:
+                save_to_sheet(take_sheet, [message.author.name, message.content])
+            else:
+                logging.error("❌ ไม่สามารถเข้าถึงชีต Take2")
 
     await bot.process_commands(message)
 
