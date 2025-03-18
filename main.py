@@ -140,8 +140,21 @@ async def on_message(message):
         elif message.channel.id == CASE_CHANNEL_ID:
             logging.info(f"📌 Raw case message: {repr(content)}")
 
+            case_match = None  # เก็บผลลัพธ์ของการตรวจสอบคดี
+
+            # ✅ ตรวจสอบข้อความปกติก่อน
             case_match = re.search(r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", content, re.DOTALL | re.IGNORECASE)
-            
+
+            # ✅ ถ้าไม่พบข้อมูลในข้อความ ให้ลองดึงข้อมูลจาก Embed
+            if not case_match and message.embeds:
+                embed = message.embeds[0]  # ดึงเฉพาะ Embed แรก
+                embed_text = f"{embed.title}\n{embed.description}"
+
+                logging.info(f"📌 Extracted from embed: {repr(embed_text)}")
+
+                case_match = re.search(r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", embed_text, re.DOTALL | re.IGNORECASE)
+
+            # ✅ บันทึกข้อมูลหากตรงรูปแบบ
             if case_match:
                 officer_name = case_match.group(1).strip()
                 case_details = case_match.group(2).strip()
@@ -152,9 +165,10 @@ async def on_message(message):
                     save_to_sheet(log_red_case, [officer_name, case_details])
                 elif log_black_case:
                     logging.info("📁 Black case detected, saving to logBlackcase")
-                    save_to_sheet(log_black_case, [officer_name, case_details])
+                    save_to_sheet(log_black_case, [of   ficer_name, case_details])
             else:
                 logging.warning("⚠️ Case format not recognized")
+
 
     await bot.process_commands(message)
 
