@@ -134,7 +134,7 @@ if GOOGLE_CREDENTIALS:
     try:
         creds = ServiceAccountCredentials.from_json_keyfile_dict(json.loads(GOOGLE_CREDENTIALS), SCOPE)
         client = gspread.authorize(creds)
-        sheet = client.open("PoliceDuty").worksheet("Sheet1")
+        sheet = client.open("PoliceDutytest").worksheet("Sheet1")
         logging.info("✅ Google Sheets setup completed.")
     except Exception as e:
         logging.error(f"❌ Error loading Google Sheets credentials: {e}")
