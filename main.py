@@ -144,7 +144,9 @@ async def on_message(message):
             case_match = None  # เก็บผลลัพธ์ของการตรวจสอบคดี
 
             # ✅ ตรวจสอบข้อความปกติก่อน
-            case_match = re.search(r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", content, re.DOTALL | re.IGNORECASE)
+            case_match = re.search(
+                r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", content, re.DOTALL | re.IGNORECASE
+            )
 
             # ✅ ถ้าไม่พบข้อมูลในข้อความ ให้ลองดึงข้อมูลจาก Embed
             if not case_match and message.embeds:
@@ -153,24 +155,33 @@ async def on_message(message):
 
                 logging.info(f"📌 Extracted from embed: {repr(embed_text)}")
 
-                case_match = re.search(r"\*\*Name:\*\*\s*([^\n]+).*?ทำคดี\s*([^*]+)", embed.description, re.DOTALL | re.IGNORECASE)
+                if embed.description:
+                    case_match = re.search(
+                        r"\*\*Name:\*\*\s*(?P<officer>[^\n]+).*?"
+                        r"ได้ทำคดี\s*(?P<case>.+?)\s*by\s*(?P<officer_id>\d+)\s*ใส่\s*(?P<suspect>[^\n]+)",
+                        embed.description,
+                        re.DOTALL | re.IGNORECASE
+                    )
 
             # ✅ บันทึกข้อมูลหากตรงรูปแบบ
             if case_match:
-                officer_name = case_match.group(1).strip()
-                case_details = case_match.group(2).strip()
+                officer_name = case_match.group("officer").strip()
+                case_details = case_match.group("case").strip()
+                officer_id = case_match.group("officer_id").strip()
+                suspect_name = case_match.group("suspect").strip()
 
-                case_details = re.split(r"\s*ใส่\s*", case_details)[0]
-                logging.info(f"✅ Extracted case - Officer: {officer_name}, Case: {case_details}")
+                logging.info(f"✅ Extracted case - Officer: {officer_name}, Case: {case_details}, ID: {officer_id}, Suspect: {suspect_name}")
 
+                # ✅ บันทึกลง Google Sheets ตามประเภทคดี
                 if "RED" in case_details and log_red_case:
                     logging.info("🚨 RED case detected, saving to logREDcase")
-                    save_to_sheet(log_red_case, [officer_name, case_details])
+                    save_to_sheet(log_red_case, [officer_name, case_details, officer_id, suspect_name])
                 elif log_black_case:
                     logging.info("📁 Black case detected, saving to logBlackcase")
-                    save_to_sheet(log_black_case, [officer_name, case_details])
+                    save_to_sheet(log_black_case, [officer_name, case_details, officer_id, suspect_name])
             else:
                 logging.warning("⚠️ Case format not recognized")
+
         
         # ✅ Take2
     elif message.channel.id == TAKE_CHANNEL_ID:
