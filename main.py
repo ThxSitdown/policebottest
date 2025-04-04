@@ -90,25 +90,30 @@ def format_datetime(raw_time):
         logging.warning(f"⚠️ รูปแบบเวลาไม่ถูกต้อง: {raw_time}")
         return raw_time
 
+def save_to_sheet(sheet, values):
+    try:
+        last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
+        column_range = f"A{last_row}:H{last_row}"  # ✅ กำหนดช่วงให้ถึงคอลัมน์ H
+        sheet.update(column_range, [values])  # ใช้ช่วงแถวที่ถูกต้อง
+        logging.info(f"✅ บันทึกลง Google Sheets: {values}")
+    except Exception as e:
+        logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
+
 def calculate_bonus_time(check_in, check_out):
     """ คำนวณเวลาทำงานที่อยู่ในช่วง 18:00 - 00:00 เท่านั้น """
     try:
         check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
         check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
 
-        # กำหนดช่วงเวลา 18:00 - 00:00 ของวัน Check-in
         work_start = check_in_dt.replace(hour=18, minute=0, second=0)
         work_end = check_in_dt.replace(hour=23, minute=59, second=59)
 
-        # ถ้า check_out เลยเที่ยงคืน ต้องขยายช่วงเวลา work_end เป็นวันถัดไป
         if check_out_dt.day != check_in_dt.day:
             work_end = work_end + datetime.timedelta(days=1)
 
-        # ปรับช่วงเวลาให้อยู่ในกรอบ 18:00 - 00:00
         adjusted_in = max(check_in_dt, work_start)
         adjusted_out = min(check_out_dt, work_end)
 
-        # ตรวจสอบว่าช่วงเวลาเป็นบวก
         if adjusted_in >= adjusted_out:
             return "00:00:00"
 
@@ -119,14 +124,6 @@ def calculate_bonus_time(check_in, check_out):
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"
 
-def save_to_sheet(sheet, values):
-    try:
-        last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
-        column_range = f"A{last_row}:H{last_row}"  # ✅ กำหนดช่วงให้ถึงคอลัมน์ H
-        sheet.update(range_name=column_range, values=[values])  # ✅ ใช้ named arguments เพื่อป้องกัน DeprecationWarning
-        logging.info(f"✅ บันทึกลง Google Sheets: {values}")
-    except Exception as e:
-        logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
 
 @bot.event
 async def on_message(message):
