@@ -57,8 +57,8 @@ if GOOGLE_CREDENTIALS:
         client = gspread.authorize(creds)
         
         # เชื่อมต่อชีตหลัก "PoliceDutytest"
-        sheet = client.open("PoliceDuty").worksheet("Sheet1")
-        logging.info("✅ Google Sheets (PoliceDuty) เชื่อมต่อสำเร็จ")
+        sheet = client.open("PoliceDutytest").worksheet("Sheet1")
+        logging.info("✅ Google Sheets (PoliceDutytest) เชื่อมต่อสำเร็จ")
         
         # เชื่อมต่อชีต "PoliceCase"
         police_case_sheet = client.open("PoliceCase")
@@ -72,9 +72,9 @@ else:
     logging.warning("⚠️ GOOGLE_CREDENTIALS not found.")
 
 # ✅ ตั้งค่าห้องที่ใช้รับข้อมูล
-DUTY_CHANNEL_ID = 1330215305066188864  
-CASE_CHANNEL_ID = 1350960006073159802 
-TAKE_CHANNEL_ID = 1351618192094662717
+DUTY_CHANNEL_ID = 1330215305066188864
+CASE_CHANNEL_ID = 1341326589157445652 
+TAKE_CHANNEL_ID = 1351619485899030651
 
 # ✅ ฟังก์ชันแปลงเวลาเป็นรูปแบบ DD/MM/YYYY HH:MM:SS
 def format_datetime(raw_time):
@@ -90,6 +90,32 @@ def format_datetime(raw_time):
         logging.warning(f"⚠️ รูปแบบเวลาไม่ถูกต้อง: {raw_time}")
         return raw_time
 
+def calculate_bonus_time(check_in, check_out):
+    """ คำนวณเวลาทำงานที่อยู่ในช่วง 18:00 - 00:00 เท่านั้น """
+    try:
+        check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
+        check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
+        
+        work_start = check_in_dt.replace(hour=18, minute=0, second=0)
+        work_end = check_in_dt.replace(hour=23, minute=59, second=59)
+
+        # ปรับช่วงเวลาให้อยู่ในกรอบ 18:00 - 00:00
+        if check_in_dt < work_start:
+            check_in_dt = work_start
+        if check_out_dt > work_end:
+            check_out_dt = work_end
+
+        if check_in_dt >= check_out_dt:
+            return "00:00:00"
+
+        bonus_time = check_out_dt - check_in_dt
+        return str(bonus_time)  # คืนค่าเป็นสตริงของช่วงเวลา
+
+    except Exception as e:
+        logging.error(f"❌ Error calculating bonus time: {e}")
+        return "00:00:00"
+
+
 # ✅ ฟังก์ชันบันทึกข้อมูลลง Google Sheets
 def save_to_sheet(sheet, values):
     try:
@@ -104,7 +130,7 @@ async def on_message(message):
     if message.author.bot:
         content = message.content.strip()
 
-        # ✅ ตรวจสอบการบันทึกเวลางาน (PoliceDuty)
+        # ✅ ตรวจสอบการบันทึกเวลางาน (PoliceDutytest)
         if message.channel.id == DUTY_CHANNEL_ID and message.author.name == "Captain Hook":
             name, steam_id, check_in_time, check_out_time = None, None, None, None
 
@@ -160,10 +186,12 @@ async def on_message(message):
                 officer_name = case_match.group(1).strip()
                 case_details = case_match.group(2).strip()
 
+                officer_name = re.sub(r"\*\*", "", officer_name).strip()
+
                 case_details = re.split(r"\s*ใส่\s*", case_details)[0]
                 logging.info(f"✅ Extracted case - Officer: {officer_name}, Case: {case_details}")
 
-                if "RED" in case_details and log_red_case:
+                if re.search(r"\bred\b", case_details, re.IGNORECASE) and log_red_case:
                     logging.info("🚨 RED case detected, saving to logREDcase")
                     save_to_sheet(log_red_case, [officer_name, case_details])
                 elif log_black_case:
@@ -181,27 +209,13 @@ async def on_message(message):
 
         # บันทึกข้อมูลลง Google Sheets
         if take_sheet:
-            save_to_sheet(take_sheet, [message.author.name, message.content])
-            logging.info(f"✅ บันทึกลง Take2: {message.author.name} - {message.content}")
+            save_to_sheet(take_sheet, [message.author.display_name, message.content])
+            logging.info(f"✅ บันทึกลง Take2: {message.author.display_name} - {message.content}")
         else:
             logging.error("❌ ไม่สามารถเข้าถึงชีต Take2")
 
+
     await bot.process_commands(message)
-
-# ✅ ฟังก์ชัน Keep-Alive
-KEEP_ALIVE_URL = "https://policebottest.onrender.com/health"
-
-def keep_alive():
-    while True:
-        try:
-            response = requests.get(KEEP_ALIVE_URL)
-            if response.status_code == 200:
-                logging.info("✅ Keep-alive successful.")
-            else:
-                logging.warning(f"⚠️ Keep-alive failed (Status: {response.status_code})")
-        except Exception as e:
-            logging.error(f"❌ Keep-alive error: {e}")
-        time.sleep(40)
 
 # ✅ ฟังก์ชันรันบอท
 def run_discord_bot():
@@ -221,5 +235,4 @@ def run_discord_bot():
 # ✅ Main
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
-    threading.Thread(target=keep_alive, daemon=True).start()
     run_discord_bot()
