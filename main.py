@@ -90,6 +90,33 @@ def format_datetime(raw_time):
         logging.warning(f"⚠️ รูปแบบเวลาไม่ถูกต้อง: {raw_time}")
         return raw_time
 
+def calculate_bonus_time(check_in, check_out):
+    try:
+        check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
+        check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
+
+        # กำหนดเวลาทำงานเริ่มต้นที่ 18:00
+        work_start = check_in_dt.replace(hour=18, minute=0, second=0)
+        work_end = check_in_dt.replace(hour=23, minute=59, second=59)
+
+        # ถ้า check_out เปลี่ยนวัน ให้ปรับ work_end เป็นวันถัดไป
+        if check_out_dt.day != check_in_dt.day:
+            work_end = work_end + datetime.timedelta(days=1)
+
+        # ปรับเวลาเริ่มต้นและสิ้นสุดให้คำนวณเฉพาะในช่วง 18:00 - 00:00
+        adjusted_in = max(check_in_dt, work_start)
+        adjusted_out = min(check_out_dt, work_end)
+
+        if adjusted_in >= adjusted_out:
+            return "00:00:00"  # ถ้าเวลาไม่อยู่ในช่วงที่คำนวณได้
+
+        bonus_time = adjusted_out - adjusted_in
+        return str(bonus_time)  # คืนค่าเวลาทำงานในรูปแบบ string
+
+    except Exception as e:
+        logging.error(f"❌ Error calculating bonus time: {e}")
+        return "00:00:00"  # คืนค่าเวลาเป็น 00:00:00 หากเกิดข้อผิดพลาด
+
 def save_to_sheet(sheet, values):
     try:
         last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
@@ -98,30 +125,6 @@ def save_to_sheet(sheet, values):
         logging.info(f"✅ บันทึกลง Google Sheets: {values}")
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
-
-def calculate_bonus_time(check_in, check_out):
-    try:
-        check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
-        check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
-
-        work_start = check_in_dt.replace(hour=18, minute=0, second=0)
-        work_end = check_in_dt.replace(hour=23, minute=59, second=59)
-
-        if check_out_dt.day != check_in_dt.day:
-            work_end = work_end + datetime.timedelta(days=1)
-
-        adjusted_in = max(check_in_dt, work_start)
-        adjusted_out = min(check_out_dt, work_end)
-
-        if adjusted_in >= adjusted_out:
-            return "00:00:00"
-
-        bonus_time = adjusted_out - adjusted_in
-        return str(bonus_time)  # คืนค่าเป็นสตริงของช่วงเวลา
-
-    except Exception as e:
-        logging.error(f"❌ Error calculating bonus time: {e}")
-        return "00:00:00"
 
 
 @bot.event
@@ -163,7 +166,6 @@ async def on_message(message):
                 save_to_sheet(sheet, values)
             else:
                 logging.warning("⚠️ ข้อมูลไม่ครบถ้วน ไม่สามารถบันทึกได้!")
-
 
         # ✅ ตรวจสอบการบันทึกคดี (PoliceCase)
         elif message.channel.id == CASE_CHANNEL_ID:
