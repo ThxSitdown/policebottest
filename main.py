@@ -115,7 +115,6 @@ def calculate_bonus_time(start_time_str, end_time_str):
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"
 
-
 def save_to_sheet(sheet, values):
     try:
         last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
