@@ -91,7 +91,6 @@ def format_datetime(raw_time):
         return raw_time
 
 def calculate_bonus_time(start_time_str, end_time_str):
-    """ คำนวณเวลาที่อยู่ในช่วง 18:00 ถึง 23:59 ของวันแรก """
     try:
         start_dt = datetime.datetime.strptime(start_time_str, "%d/%m/%Y %H:%M:%S")
         end_dt = datetime.datetime.strptime(end_time_str, "%d/%m/%Y %H:%M:%S")
