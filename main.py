@@ -96,32 +96,34 @@ def calculate_bonus_time(check_in, check_out):
         check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
         check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
 
-        # กำหนดช่วงเวลา 18:00 - 00:00
+        # กำหนดช่วงเวลา 18:00 - 00:00 ของวัน Check-in
         work_start = check_in_dt.replace(hour=18, minute=0, second=0)
         work_end = check_in_dt.replace(hour=23, minute=59, second=59)
 
+        # ถ้า check_out เลยเที่ยงคืน ต้องขยายช่วงเวลา work_end เป็นวันถัดไป
+        if check_out_dt.day != check_in_dt.day:
+            work_end = work_end + datetime.timedelta(days=1)
+
         # ปรับช่วงเวลาให้อยู่ในกรอบ 18:00 - 00:00
-        if check_in_dt < work_start:
-            check_in_dt = work_start
-        if check_out_dt > work_end:
-            check_out_dt = work_end
+        adjusted_in = max(check_in_dt, work_start)
+        adjusted_out = min(check_out_dt, work_end)
 
         # ตรวจสอบว่าช่วงเวลาเป็นบวก
-        if check_in_dt >= check_out_dt:
+        if adjusted_in >= adjusted_out:
             return "00:00:00"
 
-        bonus_time = check_out_dt - check_in_dt
+        bonus_time = adjusted_out - adjusted_in
         return str(bonus_time)  # คืนค่าเป็นสตริงของช่วงเวลา
 
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"
 
-# ✅ ฟังก์ชันบันทึกข้อมูลลง Google Sheets
 def save_to_sheet(sheet, values):
     try:
         last_row = len(sheet.col_values(1)) + 1
-        sheet.update(f"A{last_row}:D{last_row}", [values])
+        range_end = chr(65 + len(values) - 1)  # คำนวณคอลัมน์สุดท้าย (A, B, C, D, E)
+        sheet.update(f"A{last_row}:{range_end}{last_row}", [values])
         logging.info(f"✅ บันทึกลง Google Sheets: {values}")
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
