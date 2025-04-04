@@ -110,15 +110,18 @@ def calculate_bonus_time(check_in, check_out):
         if adjusted_in >= adjusted_out:
             return "00:00:00"  # ถ้าเวลาไม่อยู่ในช่วงที่คำนวณได้
 
-        # คำนวณเวลาแตกต่างกันเป็นชั่วโมง, นาที, วินาที
+        # คำนวณเวลาแตกต่างกันในช่วงเวลา 18:00 - 00:00 เท่านั้น
         bonus_time = adjusted_out - adjusted_in
         hours, remainder = divmod(bonus_time.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
-        return f"{hours:02}:{minutes:02}:{seconds:02}"  # คืนค่าเวลาในรูปแบบชั่วโมง:นาที:วินาที
+        
+        # แสดงผลลัพธ์ในรูปแบบชั่วโมง:นาที:วินาที
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
 
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"  # คืนค่าเวลาเป็น 00:00:00 หากเกิดข้อผิดพลาด
+
 
 def save_to_sheet(sheet, values):
     try:
