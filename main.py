@@ -118,8 +118,8 @@ def calculate_bonus_time(start_time_str, end_time_str):
 def save_to_sheet(sheet, values):
     try:
         last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
-        column_range = f"A{last_row}:H{last_row}"  # ✅ กำหนดช่วงให้ถึงคอลัมน์ H
-        sheet.update(column_range, [values])  # ใช้ช่วงแถวที่ถูกต้อง
+        sheet.update(f"A{last_row}:E{last_row}", [values[:5]])
+        sheet.update(f"G{last_row}:H{last_row}", [values[6:]])
         logging.info(f"✅ บันทึกลง Google Sheets: {values}")
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
