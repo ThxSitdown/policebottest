@@ -95,7 +95,8 @@ def calculate_bonus_time(check_in, check_out):
     try:
         check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
         check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
-        
+
+        # กำหนดช่วงเวลา 18:00 - 00:00
         work_start = check_in_dt.replace(hour=18, minute=0, second=0)
         work_end = check_in_dt.replace(hour=23, minute=59, second=59)
 
@@ -105,6 +106,7 @@ def calculate_bonus_time(check_in, check_out):
         if check_out_dt > work_end:
             check_out_dt = work_end
 
+        # ตรวจสอบว่าช่วงเวลาเป็นบวก
         if check_in_dt >= check_out_dt:
             return "00:00:00"
 
@@ -114,7 +116,6 @@ def calculate_bonus_time(check_in, check_out):
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"
-
 
 # ✅ ฟังก์ชันบันทึกข้อมูลลง Google Sheets
 def save_to_sheet(sheet, values):
@@ -159,6 +160,7 @@ async def on_message(message):
 
             # ✅ บันทึกลง Google Sheets ถ้าข้อมูลครบ
             if all([name, steam_id, check_in_time, check_out_time]) and sheet:
+                bonus_time = calculate_bonus_time(check_in_time, check_out_time)  # คำนวณ BonusTime
                 save_to_sheet(sheet, [name, steam_id, check_in_time, check_out_time])
             else:
                 logging.warning("⚠️ ข้อมูลไม่ครบถ้วน ไม่สามารถบันทึกได้!")
