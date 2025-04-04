@@ -100,7 +100,6 @@ def save_to_sheet(sheet, values):
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
 
 def calculate_bonus_time(check_in, check_out):
-    """ คำนวณเวลาทำงานที่อยู่ในช่วง 18:00 - 00:00 เท่านั้น """
     try:
         check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
         check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
