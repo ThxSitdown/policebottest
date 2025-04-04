@@ -121,9 +121,9 @@ def calculate_bonus_time(check_in, check_out):
 
 def save_to_sheet(sheet, values):
     try:
-        last_row = len(sheet.col_values(1)) + 1
-        range_end = chr(65 + len(values) - 1)  # คำนวณคอลัมน์สุดท้าย (A, B, C, D, E)
-        sheet.update(f"A{last_row}:{range_end}{last_row}", [values])
+        last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
+        column_range = f"A{last_row}:H{last_row}"  # ✅ กำหนดช่วงให้ถึงคอลัมน์ H
+        sheet.update(range_name=column_range, values=[values])  # ✅ ใช้ named arguments เพื่อป้องกัน DeprecationWarning
         logging.info(f"✅ บันทึกลง Google Sheets: {values}")
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
@@ -162,8 +162,9 @@ async def on_message(message):
 
             # ✅ บันทึกลง Google Sheets ถ้าข้อมูลครบ
             if all([name, steam_id, check_in_time, check_out_time]) and sheet:
-                bonus_time = calculate_bonus_time(check_in_time, check_out_time)  # คำนวณ BonusTime
-                save_to_sheet(sheet, [name, steam_id, check_in_time, check_out_time, bonus_time])
+                bonus_time = calculate_bonus_time(check_in_time, check_out_time)
+                values = [name, steam_id, check_in_time, check_out_time, "", "", "", bonus_time]  # ✅ ใส่ BonusTime ที่ช่อง H (index 7)
+                save_to_sheet(sheet, values)
             else:
                 logging.warning("⚠️ ข้อมูลไม่ครบถ้วน ไม่สามารถบันทึกได้!")
 
