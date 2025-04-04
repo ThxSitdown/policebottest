@@ -90,37 +90,30 @@ def format_datetime(raw_time):
         logging.warning(f"⚠️ รูปแบบเวลาไม่ถูกต้อง: {raw_time}")
         return raw_time
 
-def calculate_bonus_time(check_in, check_out):
+def calculate_bonus_time(start_time_str, end_time_str):
+    """ คำนวณเวลาที่อยู่ในช่วง 18:00 ถึง 23:59 ของวันแรก """
     try:
-        check_in_dt = datetime.datetime.strptime(check_in, "%d/%m/%Y %H:%M:%S")
-        check_out_dt = datetime.datetime.strptime(check_out, "%d/%m/%Y %H:%M:%S")
+        start_dt = datetime.datetime.strptime(start_time_str, "%d/%m/%Y %H:%M:%S")
+        end_dt = datetime.datetime.strptime(end_time_str, "%d/%m/%Y %H:%M:%S")
 
-        # กำหนดเวลาทำงานเริ่มต้นที่ 18:00
-        work_start = check_in_dt.replace(hour=18, minute=0, second=0)
-        work_end = check_in_dt.replace(hour=23, minute=59, second=59)
+        # กำหนดช่วงเวลาโบนัส (ภายในวันเดียวกันเท่านั้น)
+        bonus_start = start_dt.replace(hour=18, minute=0, second=0)
+        bonus_end = start_dt.replace(hour=23, minute=59, second=59)
 
-        # ถ้า check_out เปลี่ยนวัน ให้ปรับ work_end เป็นวันถัดไป
-        if check_out_dt.day != check_in_dt.day:
-            work_end = work_end + datetime.timedelta(days=1)
+        # หาจุดตัดที่เหมาะสมระหว่างเวลาเข้า-ออก กับช่วงโบนัส
+        real_start = max(start_dt, bonus_start)
+        real_end = min(end_dt, bonus_end)
 
-        # ปรับเวลาเริ่มต้นและสิ้นสุดให้คำนวณเฉพาะในช่วง 18:00 - 00:00
-        adjusted_in = max(check_in_dt, work_start)
-        adjusted_out = min(check_out_dt, work_end)
+        # ถ้าเวลาสิ้นสุดก่อนเวลาเริ่ม แสดงว่าไม่มีเวลาที่เข้าเงื่อนไข
+        if real_end < real_start:
+            bonus_duration = datetime.timedelta()
+        else:
+            bonus_duration = real_end - real_start
 
-        if adjusted_in >= adjusted_out:
-            return "00:00:00"  # ถ้าเวลาไม่อยู่ในช่วงที่คำนวณได้
-
-        # คำนวณเวลาแตกต่างกันในช่วงเวลา 18:00 - 00:00 เท่านั้น
-        bonus_time = adjusted_out - adjusted_in
-        hours, remainder = divmod(bonus_time.seconds, 3600)
-        minutes, seconds = divmod(remainder, 60)
-        
-        # แสดงผลลัพธ์ในรูปแบบชั่วโมง:นาที:วินาที
-        return f"{hours:02}:{minutes:02}:{seconds:02}"
-
+        return str(bonus_duration)
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
-        return "00:00:00"  # คืนค่าเวลาเป็น 00:00:00 หากเกิดข้อผิดพลาด
+        return "00:00:00"
 
 
 def save_to_sheet(sheet, values):
@@ -131,7 +124,6 @@ def save_to_sheet(sheet, values):
         logging.info(f"✅ บันทึกลง Google Sheets: {values}")
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
-
 
 @bot.event
 async def on_message(message):
