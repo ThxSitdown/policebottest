@@ -99,23 +99,37 @@ def calculate_bonus_time(start_time_str, end_time_str):
         current = start_dt
 
         while current < end_dt:
-            day = current.weekday()  # Monday is 0, Sunday is 6
+            day = current.weekday()  # Monday = 0, Sunday = 6
 
-            # Set bonus window
+            # Bonus time starts at 18:00 of current day
             bonus_start = current.replace(hour=18, minute=0, second=0)
-            if day <= 3:  # Monday–Thursday ➝ 18:00–00:00
-                bonus_end = bonus_start.replace(hour=23, minute=59, second=59)
-            else:  # Friday–Sunday ➝ 18:00–04:00 next day
-                bonus_end = bonus_start + datetime.timedelta(hours=10)  # 18:00 ➝ 04:00 (next day)
 
-            # Clamp bonus window within the range of work time
+            # Check if this is Monday (0) ➝ only allow bonus until 00:00
+            if day <= 3:  # Monday - Thursday ➝ bonus 18:00 - 00:00
+                bonus_end = bonus_start + datetime.timedelta(hours=6)
+            elif day == 6:  # Sunday ➝ bonus 18:00 - 04:00 of next day (Monday)
+                bonus_end = bonus_start + datetime.timedelta(hours=10)
+
+                # ➤ Remove Monday 04:00 onward
+                if bonus_end.date().weekday() == 0:
+                    bonus_end = bonus_start.replace(hour=23, minute=59, second=59)
+            else:  # Friday or Saturday ➝ 18:00 - 04:00 next day
+                bonus_end = bonus_start + datetime.timedelta(hours=10)
+
             real_start = max(current, bonus_start)
             real_end = min(end_dt, bonus_end)
 
             if real_end > real_start:
-                total_bonus += (real_end - real_start)
+                # เพิ่มกรณีไม่คิดโบนัสของวันจันทร์หลังตี 4
+                if real_end.weekday() == 0 and real_end.hour >= 4:
+                    # ตัดออกแค่ส่วนที่เลย 04:00 วันจันทร์
+                    allowed_end = real_end.replace(hour=4, minute=0, second=0)
+                    if real_start < allowed_end:
+                        total_bonus += allowed_end - real_start
+                else:
+                    total_bonus += real_end - real_start
 
-            # Move to next day 00:00
+            # เลื่อนไปวันถัดไป 00:00
             current = current.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
 
         return str(total_bonus) if total_bonus != datetime.timedelta() else "00:00:00"
