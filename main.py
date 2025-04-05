@@ -129,22 +129,21 @@ def calculate_bonus_time(start_time_str, end_time_str):
 
 def save_to_sheet(sheet, values):
     try:
-        # แปลง check-in, check-out เป็น datetime object
-        check_in_dt = datetime.datetime.strptime(values[2], "%d/%m/%Y %H:%M:%S")
-        check_out_dt = datetime.datetime.strptime(values[3], "%d/%m/%Y %H:%M:%S")
+        # แปลง check-in, check-out เป็น ISO string
+        check_in_dt = datetime.datetime.strptime(values[2], "%d/%m/%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+        check_out_dt = datetime.datetime.strptime(values[3], "%d/%m/%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
 
-        # เตรียม row สำหรับ append
         row = [
-            values[0],  # name
-            values[1],  # steam_id
-            check_in_dt,  # datetime object ➝ Google Sheets เข้าใจ
-            check_out_dt,  # datetime object
-            "", "",  # columns F & G
-            values[7]  # bonus time string
+            values[0],        # name
+            values[1],        # steam_id
+            check_in_dt,      # ISO string ➝ Sheets เข้าใจว่าเป็นวันเวลา
+            check_out_dt,     # ISO string
+            "", "",           # columns E, F
+            values[7]         # bonus time
         ]
 
         sheet.append_row(row, value_input_option="USER_ENTERED")
-        logging.info(f"✅ บันทึกลง Google Sheets แบบ DateTime: {row}")
+        logging.info(f"✅ บันทึกลง Google Sheets แบบ ISO datetime: {row}")
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets (DateTime): {e}")
 
