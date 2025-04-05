@@ -129,12 +129,17 @@ def calculate_bonus_time(start_time_str, end_time_str):
 
 def save_to_sheet(sheet, values):
     try:
-        last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
-        sheet.update(values=[values[:5]], range_name=f"A{last_row}:E{last_row}")
-        sheet.update(values=[values[6:]], range_name=f"G{last_row}:H{last_row}")
+        # Check the current number of rows
+        last_row = len(sheet.get_all_values()) + 1  # Get the total number of rows
+
+        # Append data instead of updating a specific row
+        sheet.append_row(values[:5])  # Assuming the first 5 columns
+        sheet.append_row(values[6:])  # Assuming the next columns from 6 onwards
         logging.info(f"✅ บันทึกลง Google Sheets: {values}")
+
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
+
 
 @bot.event
 async def on_message(message):
