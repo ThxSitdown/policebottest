@@ -97,52 +97,31 @@ def calculate_bonus_time(start_time_str, end_time_str):
         current = start_dt
 
         while current < end_dt:
-            day = current.weekday()  # Monday = 0, Sunday = 6
+            day = current.weekday()
             bonus_start = current.replace(hour=18, minute=0, second=0)
 
-            # สำหรับวันจันทร์ถึงพฤหัสบดี ➝ 18:00–00:00
-            if day <= 3:  # Monday–Thursday
+            # วันศุกร์-เสาร์-อาทิตย์ ➝ 18:00–04:00 วันถัดไป
+            if day >= 4:
+                bonus_end = bonus_start + datetime.timedelta(hours=10)
+            else:
                 bonus_end = bonus_start + datetime.timedelta(hours=6)
 
-            # สำหรับวันศุกร์ถึงอาทิตย์ ➝ 18:00–04:00 ของวันถัดไป
-            elif day == 4:  # Friday
-                bonus_end = bonus_start + datetime.timedelta(hours=10)
-
-            elif day == 5:  # Saturday
-                bonus_end = bonus_start + datetime.timedelta(hours=10)
-
-            elif day == 6:  # Sunday
-                bonus_end = bonus_start + datetime.timedelta(hours=10)
-                
-                # ปรับเวลาให้เป็น 04:00 ของวันอาทิตย์หากเป็นวันจันทร์
-                if bonus_end.weekday() == 0:
-                    bonus_end = bonus_end.replace(hour=4, minute=0, second=0)
-                    
+            if day == 6:
                 logging.info(f"📅 Sunday adjustment: {bonus_start} -> {bonus_end}")
 
-            # ตรวจสอบว่าช่วงเวลาในแต่ละวันอยู่ในช่วงโบนัส
-            real_start = max(current, bonus_start)
+            # ช่วงเวลาที่จริงที่ทำงานและอยู่ในช่วงโบนัส
+            real_start = max(current, bonus_start, start_dt)
             real_end = min(end_dt, bonus_end)
 
-            # เพิ่มบันทึกเพื่อเช็คค่าต่างๆ
-            logging.info(f"📅 วัน: {current.strftime('%A')}, เวลาเริ่ม: {real_start.strftime('%H:%M:%S')}, เวลาเสร็จสิ้น: {real_end.strftime('%H:%M:%S')}")
-
-            # ถ้ามีช่วงเวลา bonus ที่สามารถคำนวณได้
             if real_end > real_start:
-                if real_end < real_start:
-                    real_end += datetime.timedelta(days=1)
                 total_bonus += (real_end - real_start)
 
-
-            # ไปวันถัดไปตอนเที่ยงคืน
             current = current.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
 
-        # แปลงผลลัพธ์ให้เป็นรูปแบบที่ Google Sheets เข้าใจ (เวลาในรูป HH:MM:SS)
         hours, remainder = divmod(total_bonus.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         formatted_bonus_time = f"{hours:02}:{minutes:02}:{seconds:02}"
 
-        # ตรวจสอบว่าโบนัสเวลาเป็น 00:00:00 หรือไม่ (หากไม่มีโบนัสเวลา)
         return formatted_bonus_time if total_bonus != datetime.timedelta() else "00:00:00"
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
