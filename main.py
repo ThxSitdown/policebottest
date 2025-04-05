@@ -113,9 +113,13 @@ def calculate_bonus_time(start_time_str, end_time_str):
 
             elif day == 6:  # Sunday
                 bonus_end = bonus_start + datetime.timedelta(hours=10)
-                if bonus_end.weekday() == 0:  # หากเวลาสิ้นสุดในวันจันทร์ ต้องปรับให้เป็น 04:00 ของวันอาทิตย์
+                
+                # ปรับเวลาให้เป็น 04:00 ของวันอาทิตย์หากเป็นวันจันทร์
+                if bonus_end.weekday() == 0:
                     bonus_end = bonus_end.replace(hour=4, minute=0, second=0)
-
+                    
+                logging.info(f"📅 Sunday adjustment: {bonus_start} -> {bonus_end}")
+                
             # ตรวจสอบว่าช่วงเวลาในแต่ละวันอยู่ในช่วงโบนัส
             real_start = max(current, bonus_start)
             real_end = min(end_dt, bonus_end)
