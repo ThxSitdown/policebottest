@@ -120,7 +120,12 @@ def calculate_bonus_time(start_time_str, end_time_str):
             # ไปวันถัดไปตอนเที่ยงคืน
             current = current.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
 
-        return str(total_bonus) if total_bonus != datetime.timedelta() else "00:00:00"
+        # แปลงผลลัพธ์ให้เป็นรูปแบบที่ Google Sheets เข้าใจ (เวลาในรูป HH:MM:SS)
+        hours, remainder = divmod(total_bonus.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        formatted_bonus_time = f"{hours:02}:{minutes:02}:{seconds:02}"
+
+        return formatted_bonus_time if total_bonus != datetime.timedelta() else "00:00:00"
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"
@@ -168,11 +173,12 @@ async def on_message(message):
 
             # บันทึกลง Google Sheets ถ้าข้อมูลครบ
             if all([name, steam_id, check_in_time, check_out_time]) and sheet:
-                bonus_time = calculate_bonus_time(check_in_time, check_out_time)
-                values = [name, steam_id, check_in_time, check_out_time, "", "", "", bonus_time]
-                save_to_sheet(sheet, values)
+                bonus_time = calculate_bonus_time(check_in_time, check_out_time)  # คำนวณโบนัสเวลา
+                values = [name, steam_id, check_in_time, check_out_time, "", "", "", bonus_time]  # บันทึกข้อมูลพร้อม bonus_time
+                save_to_sheet(sheet, values)  # บันทึกลง Google Sheets
             else:
                 logging.warning("⚠️ ข้อมูลไม่ครบถ้วน ไม่สามารถบันทึกได้!")
+
 
         # ตรวจสอบการบันทึกคดี (PoliceCase)
         elif message.channel.id == CASE_CHANNEL_ID:
