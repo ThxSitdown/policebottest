@@ -119,7 +119,7 @@ def calculate_bonus_time(start_time_str, end_time_str):
                     bonus_end = bonus_end.replace(hour=4, minute=0, second=0)
                     
                 logging.info(f"📅 Sunday adjustment: {bonus_start} -> {bonus_end}")
-                
+
             # ตรวจสอบว่าช่วงเวลาในแต่ละวันอยู่ในช่วงโบนัส
             real_start = max(current, bonus_start)
             real_end = min(end_dt, bonus_end)
@@ -129,7 +129,10 @@ def calculate_bonus_time(start_time_str, end_time_str):
 
             # ถ้ามีช่วงเวลา bonus ที่สามารถคำนวณได้
             if real_end > real_start:
+                if real_end < real_start:
+                    real_end += datetime.timedelta(days=1)
                 total_bonus += (real_end - real_start)
+
 
             # ไปวันถัดไปตอนเที่ยงคืน
             current = current.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=1)
