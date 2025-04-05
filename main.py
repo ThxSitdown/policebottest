@@ -100,20 +100,27 @@ def calculate_bonus_time(start_time_str, end_time_str):
             day = current.weekday()  # Monday = 0, Sunday = 6
             bonus_start = current.replace(hour=18, minute=0, second=0)
 
-            if day <= 3:  # Monday–Thursday ➝ 18:00–00:00
+            # สำหรับวันจันทร์ถึงพฤหัสบดี ➝ 18:00–00:00
+            if day <= 3:  # Monday–Thursday
                 bonus_end = bonus_start + datetime.timedelta(hours=6)
 
-            elif day == 6:  # Sunday ➝ 18:00–04:00 Monday (but skip 04:00 Monday)
-                bonus_end = bonus_start + datetime.timedelta(hours=10)
-                if bonus_end.weekday() == 0:
-                    bonus_end = bonus_end.replace(hour=0, minute=0, second=0)
-
-            else:  # Friday, Saturday ➝ 18:00–04:00 next day
+            # สำหรับวันศุกร์ถึงอาทิตย์ ➝ 18:00–04:00 ของวันถัดไป
+            elif day == 4:  # Friday
                 bonus_end = bonus_start + datetime.timedelta(hours=10)
 
+            elif day == 5:  # Saturday
+                bonus_end = bonus_start + datetime.timedelta(hours=10)
+
+            elif day == 6:  # Sunday
+                bonus_end = bonus_start + datetime.timedelta(hours=10)
+                if bonus_end.weekday() == 0:  # หากเวลาสิ้นสุดในวันจันทร์ ต้องปรับให้เป็น 04:00 ของวันอาทิตย์
+                    bonus_end = bonus_end.replace(hour=4, minute=0, second=0)
+
+            # คำนวณเวลาที่จริง
             real_start = max(current, bonus_start)
             real_end = min(end_dt, bonus_end)
 
+            # ถ้ามีช่วงเวลา bonus ที่สามารถคำนวณได้
             if real_end > real_start:
                 total_bonus += (real_end - real_start)
 
