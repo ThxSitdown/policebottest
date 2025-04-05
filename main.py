@@ -116,12 +116,11 @@ def calculate_bonus_time(start_time_str, end_time_str):
                 if bonus_end.weekday() == 0:  # หากเวลาสิ้นสุดในวันจันทร์ ต้องปรับให้เป็น 04:00 ของวันอาทิตย์
                     bonus_end = bonus_end.replace(hour=4, minute=0, second=0)
 
-            # คำนวณเวลาที่จริง
+            # ตรวจสอบว่าเวลาเริ่มต้นและสิ้นสุดอยู่ในช่วงเวลาโบนัส
             real_start = max(current, bonus_start)
             real_end = min(end_dt, bonus_end)
 
-            # ถ้ามีช่วงเวลา bonus ที่สามารถคำนวณได้
-            if real_end > real_start:
+            if real_end > real_start:  # ถ้าช่วงเวลาที่คำนวณมีความยาว
                 total_bonus += (real_end - real_start)
 
             # ไปวันถัดไปตอนเที่ยงคืน
