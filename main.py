@@ -94,7 +94,7 @@ def calculate_bonus_time(start_time_str, end_time_str):
         end_dt = datetime.datetime.strptime(end_time_str, "%d/%m/%Y %H:%M:%S")
 
         total_bonus = datetime.timedelta()
-        current = start_dt
+        current = (start_dt - datetime.timedelta(days=1)).replace(hour=18, minute=0, second=0)
 
         while current < end_dt:
             day = current.weekday()
