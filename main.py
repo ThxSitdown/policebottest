@@ -95,21 +95,32 @@ def calculate_bonus_time(start_time_str, end_time_str):
         start_dt = datetime.datetime.strptime(start_time_str, "%d/%m/%Y %H:%M:%S")
         end_dt = datetime.datetime.strptime(end_time_str, "%d/%m/%Y %H:%M:%S")
 
-        # กำหนดช่วงเวลาโบนัส (ภายในวันเดียวกันเท่านั้น)
-        bonus_start = start_dt.replace(hour=18, minute=0, second=0)
-        bonus_end = start_dt.replace(hour=23, minute=59, second=59)
+        bonus_duration = datetime.timedelta()
 
-        # หาจุดตัดที่เหมาะสมระหว่างเวลาเข้า-ออก กับช่วงโบนัส
-        real_start = max(start_dt, bonus_start)
-        real_end = min(end_dt, bonus_end)
+        current_dt = start_dt
+        while current_dt < end_dt:
+            next_dt = min(current_dt.replace(hour=23, minute=59, second=59) + datetime.timedelta(seconds=1), end_dt)
+            day_of_week = current_dt.weekday()  # 0 = Monday, ..., 6 = Sunday
 
-        # ถ้าเวลาสิ้นสุดก่อนเวลาเริ่ม แสดงว่าไม่มีเวลาที่เข้าเงื่อนไข
-        if real_end < real_start:
-            bonus_duration = datetime.timedelta()
-        else:
-            bonus_duration = real_end - real_start
+            # ช่วงโบนัสเริ่มต้นที่ 18:00 ของวันนั้น
+            bonus_start = current_dt.replace(hour=18, minute=0, second=0)
 
-        return str(bonus_duration)
+            if day_of_week <= 3:  # จันทร์-พฤหัสบดี
+                bonus_end = current_dt.replace(hour=23, minute=59, second=59)
+            else:  # ศุกร์-อาทิตย์
+                bonus_end = (current_dt + datetime.timedelta(days=1)).replace(hour=4, minute=0, second=0)
+
+            # หาจุดตัดที่เหมาะสม
+            real_start = max(current_dt, bonus_start)
+            real_end = min(next_dt, bonus_end)
+
+            if real_end > real_start:
+                bonus_duration += real_end - real_start
+
+            current_dt = next_dt
+
+        return str(bonus_duration) if bonus_duration != datetime.timedelta() else "00:00:00"
+
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"
