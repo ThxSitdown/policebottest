@@ -120,6 +120,9 @@ def calculate_bonus_time(start_time_str, end_time_str):
             real_start = max(current, bonus_start)
             real_end = min(end_dt, bonus_end)
 
+            # เพิ่มบันทึกเพื่อเช็คค่าต่างๆ
+            logging.info(f"📅 วัน: {current.strftime('%A')}, เวลาเริ่ม: {real_start.strftime('%H:%M:%S')}, เวลาเสร็จสิ้น: {real_end.strftime('%H:%M:%S')}")
+
             # ถ้ามีช่วงเวลา bonus ที่สามารถคำนวณได้
             if real_end > real_start:
                 total_bonus += (real_end - real_start)
