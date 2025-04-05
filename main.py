@@ -103,7 +103,7 @@ def calculate_bonus_time(start_time_str, end_time_str):
             bonus_start = current.replace(hour=18, minute=0, second=0)
 
             if day <= 3:  # Monday–Thursday ➝ 18:00–00:00
-                bonus_end = bonus_start.replace(hour=23, minute=59, second=59)
+                bonus_end = bonus_start + datetime.timedelta(hours=6)
 
             elif day == 6:  # Sunday ➝ 18:00–04:00 Monday (but skip 04:00 Monday)
                 bonus_end = bonus_start + datetime.timedelta(hours=10)
