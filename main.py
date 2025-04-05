@@ -129,7 +129,7 @@ def calculate_bonus_time(start_time_str, end_time_str):
 
 def save_to_sheet(sheet, values):
     try:
-        laslast_row = len(sheet.col_values(1)) + 1
+        last_row = len(sheet.col_values(1))
         sheet.append_row(values[:5])  
         sheet.append_row(values[6:]) 
         logging.info(f"✅ บันทึกลง Google Sheets: {values}")
