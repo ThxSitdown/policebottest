@@ -129,26 +129,12 @@ def calculate_bonus_time(start_time_str, end_time_str):
 
 def save_to_sheet(sheet, values):
     try:
-        # แปลง check-in, check-out เป็น ISO string
-        check_in_dt = datetime.datetime.strptime(values[2], "%d/%m/%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
-        check_out_dt = datetime.datetime.strptime(values[3], "%d/%m/%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
-
-        row = [
-            values[0],        # name
-            values[1],        # steam_id
-            check_in_dt,      # ISO string ➝ Sheets เข้าใจว่าเป็นวันเวลา
-            check_out_dt,     # ISO string
-            "", "",           # columns E, F
-            values[7]         # bonus time
-        ]
-        
-        # ตรวจสอบก่อนบันทึก
-        logging.info(f"Saving to sheet with row: {row}")
-        
-        sheet.append_row(row, value_input_option="USER_ENTERED")
-        logging.info(f"✅ บันทึกลง Google Sheets แบบ ISO datetime: {row}")
+        last_row = len(sheet.col_values(1)) + 1  # หาค่า row ล่าสุด
+        sheet.update(values=[values[:5]], range_name=f"A{last_row}:E{last_row}")
+        sheet.update(values=[values[6:]], range_name=f"G{last_row}:H{last_row}")
+        logging.info(f"✅ บันทึกลง Google Sheets: {values}")
     except Exception as e:
-        logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets (DateTime): {e}")
+        logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
 
 @bot.event
 async def on_message(message):
