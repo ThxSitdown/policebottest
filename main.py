@@ -116,11 +116,12 @@ def calculate_bonus_time(start_time_str, end_time_str):
                 if bonus_end.weekday() == 0:  # หากเวลาสิ้นสุดในวันจันทร์ ต้องปรับให้เป็น 04:00 ของวันอาทิตย์
                     bonus_end = bonus_end.replace(hour=4, minute=0, second=0)
 
-            # ตรวจสอบว่าเวลาเริ่มต้นและสิ้นสุดอยู่ในช่วงเวลาโบนัส
+            # คำนวณโบนัสเวลา
             real_start = max(current, bonus_start)
             real_end = min(end_dt, bonus_end)
 
-            if real_end > real_start:  # ถ้าช่วงเวลาที่คำนวณมีความยาว
+            # ถ้ามีช่วงเวลา bonus ที่สามารถคำนวณได้
+            if real_end > real_start:
                 total_bonus += (real_end - real_start)
 
             # ไปวันถัดไปตอนเที่ยงคืน
@@ -131,11 +132,11 @@ def calculate_bonus_time(start_time_str, end_time_str):
         minutes, seconds = divmod(remainder, 60)
         formatted_bonus_time = f"{hours:02}:{minutes:02}:{seconds:02}"
 
+        # ตรวจสอบว่าโบนัสเวลาเป็น 00:00:00 หรือไม่ (หากไม่มีโบนัสเวลา)
         return formatted_bonus_time if total_bonus != datetime.timedelta() else "00:00:00"
     except Exception as e:
         logging.error(f"❌ Error calculating bonus time: {e}")
         return "00:00:00"
-
 
 def save_to_sheet(sheet, values):
     try:
