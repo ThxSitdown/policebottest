@@ -5,8 +5,6 @@ import json
 import re
 import logging
 import threading
-import requests
-import time
 from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask
 from discord.ext import commands
@@ -46,7 +44,7 @@ async def on_ready():
     logging.info(f"🤖 {bot.user} is online and ready!")
     await bot.change_presence(activity=discord.Game(name="Roblox"))
 
-# ✅ ตั้งค่า Google Sheets
+# ตั้งค่า Google Sheets
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 GOOGLE_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS")
 sheet, log_red_case, log_black_case = None, None, None
@@ -71,12 +69,12 @@ if GOOGLE_CREDENTIALS:
 else:
     logging.warning("⚠️ GOOGLE_CREDENTIALS not found.")
 
-# ✅ ตั้งค่าห้องที่ใช้รับข้อมูล
+# ตั้งค่าห้องที่ใช้รับข้อมูล
 DUTY_CHANNEL_ID = 1330215305066188864
 CASE_CHANNEL_ID = 1341326589157445652 
 TAKE_CHANNEL_ID = 1351619485899030651
 
-# ✅ ฟังก์ชันแปลงเวลาเป็นรูปแบบ DD/MM/YYYY HH:MM:SS
+# ฟังก์ชันแปลงเวลาเป็นรูปแบบ DD/MM/YYYY HH:MM:SS
 def format_datetime(raw_time):
     pattern = r"(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})"
     match = re.search(pattern, raw_time)
@@ -136,13 +134,12 @@ def save_to_sheet(sheet, values):
     except Exception as e:
         logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
 
-
 @bot.event
 async def on_message(message):
     if message.author.bot:
         content = message.content.strip()
 
-        # ✅ ตรวจสอบการบันทึกเวลางาน (PoliceDutytest)
+        # ตรวจสอบการบันทึกเวลางาน (PoliceDutytest)
         if message.channel.id == DUTY_CHANNEL_ID and message.author.name == "Captain Hook":
             name, steam_id, check_in_time, check_out_time = None, None, None, None
 
@@ -169,7 +166,7 @@ async def on_message(message):
                     check_in_time = format_datetime(match.group(3).strip())
                     check_out_time = format_datetime(match.group(4).strip())
 
-            # ✅ บันทึกลง Google Sheets ถ้าข้อมูลครบ
+            # บันทึกลง Google Sheets ถ้าข้อมูลครบ
             if all([name, steam_id, check_in_time, check_out_time]) and sheet:
                 bonus_time = calculate_bonus_time(check_in_time, check_out_time)
                 values = [name, steam_id, check_in_time, check_out_time, "", "", "", bonus_time]
@@ -177,13 +174,13 @@ async def on_message(message):
             else:
                 logging.warning("⚠️ ข้อมูลไม่ครบถ้วน ไม่สามารถบันทึกได้!")
 
-        # ✅ ตรวจสอบการบันทึกคดี (PoliceCase)
+        # ตรวจสอบการบันทึกคดี (PoliceCase)
         elif message.channel.id == CASE_CHANNEL_ID:
             logging.info(f"📌 Raw case message: {repr(content)}")
 
             case_match = None  # เก็บผลลัพธ์ของการตรวจสอบคดี
 
-            # ✅ ลองดึงข้อมูลจาก Embed (ทุกฟิลด์)
+            # ลองดึงข้อมูลจาก Embed (ทุกฟิลด์)
             if message.embeds:
                 embed = message.embeds[0]  # ดึงเฉพาะ Embed แรก
                 embed_data = f"📌 Embed Data - Title: {embed.title}, Desc: {embed.description}, Fields: {[{'name': f.name, 'value': f.value} for f in embed.fields]}"
@@ -192,10 +189,10 @@ async def on_message(message):
                 # รวมข้อมูลจากทุกฟิลด์เป็นข้อความเดียว
                 embed_text = f"{embed.title}\n{embed.description}\n" + "\n".join([f"{f.name}: {f.value}" for f in embed.fields])
 
-                # ✅ ลองค้นหา "ได้ทำคดี" จาก Embed
+                # ลองค้นหา "ได้ทำคดี" จาก Embed
                 case_match = re.search(r"Name:\s*([^\n]+).*?ได้ทำคดี\s*([^\n]+)", embed_text, re.DOTALL | re.IGNORECASE)
 
-            # ✅ บันทึกข้อมูลหากตรงรูปแบบ
+            # บันทึกข้อมูลหากตรงรูปแบบ
             if case_match:
                 officer_name = case_match.group(1).strip()
                 case_details = case_match.group(2).strip()
@@ -215,7 +212,7 @@ async def on_message(message):
                 logging.warning("⚠️ Case format not recognized")
 
         
-        # ✅ Take2
+        # Take2 Channel
     elif message.channel.id == TAKE_CHANNEL_ID:
         logging.info(f"📌 รับข้อความจาก Take2 Channel: {repr(message.content)}")
 
@@ -228,10 +225,9 @@ async def on_message(message):
         else:
             logging.error("❌ ไม่สามารถเข้าถึงชีต Take2")
 
-
     await bot.process_commands(message)
 
-# ✅ ฟังก์ชันรันบอท
+# ฟังก์ชันรันบอท
 def run_discord_bot():
     DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
     if not DISCORD_BOT_TOKEN:
@@ -246,7 +242,7 @@ def run_discord_bot():
     except Exception as e:
         logging.error(f"❌ Discord bot error: {e}")
 
-# ✅ Main
+# Main
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
     run_discord_bot()
