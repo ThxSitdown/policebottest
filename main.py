@@ -129,26 +129,26 @@ def calculate_bonus_time(start_time_str, end_time_str):
 
 def save_to_sheet(sheet, values):
     try:
+        # แปลง check-in, check-out เป็น ISO string
         check_in_dt = datetime.datetime.strptime(values[2], "%d/%m/%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
         check_out_dt = datetime.datetime.strptime(values[3], "%d/%m/%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
-
-        # ➤ แปลงโบนัสไทม์เป็นจำนวนวัน (float) ➝ เช่น 4:47:30 = 0.19965278 วัน
-        h, m, s = map(int, values[7].split(":"))
-        bonus_duration = h / 24 + m / 1440 + s / 86400  # คำนวณเป็น "วัน"
 
         row = [
             values[0],        # name
             values[1],        # steam_id
-            check_in_dt,      # datetime
-            check_out_dt,     # datetime
+            check_in_dt,      # ISO string ➝ Sheets เข้าใจว่าเป็นวันเวลา
+            check_out_dt,     # ISO string
             "", "",           # columns E, F
-            bonus_duration    # ➤ Duration ที่ Google Sheets เข้าใจ
+            values[7]         # bonus time
         ]
-
+        
+        # ตรวจสอบก่อนบันทึก
+        logging.info(f"Saving to sheet with row: {row}")
+        
         sheet.append_row(row, value_input_option="USER_ENTERED")
-        logging.info(f"✅ บันทึกลง Google Sheets พร้อม Duration: {row}")
+        logging.info(f"✅ บันทึกลง Google Sheets แบบ ISO datetime: {row}")
     except Exception as e:
-        logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets: {e}")
+        logging.error(f"❌ ไม่สามารถบันทึกลง Google Sheets (DateTime): {e}")
 
 @bot.event
 async def on_message(message):
